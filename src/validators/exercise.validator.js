@@ -18,9 +18,10 @@ export const exerciseValidationSchema = z.object({
     .trim()
     .min(2, "Target muscle is required."),
 
-  secondaryMuscles: z
-    .array(z.string().trim())
-    .default([]),
+  secondaryMuscles: z.union([
+    z.string(),
+    z.array(z.string().trim())
+  ]).optional(),
 
   equipment: z
     .string()
@@ -36,22 +37,23 @@ export const exerciseValidationSchema = z.object({
   description: z
     .string()
     .trim()
-    .min(10, "Description must be at least 10 characters.")
     .max(1000)
     .optional(),
 
-  thumbnail: z
-    .string()
-    .trim()
-    .url("Please provide a valid thumbnail URL."),
+  // thumbnail: z
+  //   .string()
+  //   .trim()
+  //   .url("Please provide a valid thumbnail URL."),
 
-  video: z
-    .string()
-    .trim()
-    .url("Please provide a valid video URL."),
+  // video: z
+  //   .string()
+  //   .trim()
+  //   .url("Please provide a valid video URL."),
 
   duration: z
     .string()
     .trim()
     .optional(),
 });
+
+export const updateExerciseSchema = exerciseValidationSchema.optional();

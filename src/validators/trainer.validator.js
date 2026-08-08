@@ -1,10 +1,7 @@
 import { z } from "zod";
 
 export const trainerValidationSchema = z.object({
-  image: z
-    .string()
-    .trim()
-    .url("Please provide a valid image URL."),
+
 
   name: z
     .string()
@@ -29,6 +26,10 @@ export const trainerValidationSchema = z.object({
     .max(80, "Invalid age."),
 
   gender: z.enum(["male", "female"]),
+
+  experience: z.coerce
+  .number()
+  .min(0, "Experience cannot be negative."),
 });
 
 export const updateTrainerSchema = trainerValidationSchema.partial();

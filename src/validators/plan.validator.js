@@ -1,10 +1,6 @@
 import { z } from "zod";
 
 export const planValidationSchema = z.object({
-  image: z
-    .string()
-    .trim()
-    .url("Please provide a valid image URL."),
 
   name: z
     .string()
@@ -12,12 +8,18 @@ export const planValidationSchema = z.object({
     .min(3, "Plan name must be at least 3 characters.")
     .max(100),
 
+     description: z
+    .string()
+    .trim()
+    .min(2, "Plan name must be at least 2 characters.")
+    .max(300),
+
   duration: z
     .string()
     .trim()
     .min(1, "Duration is required."),
 
-  type: z.enum(["premium", "normal"]),
+  type: z.enum(["elegant", "basic","elite"]),
 
   subscriptionCharge: z.coerce
     .number()

@@ -18,8 +18,18 @@ app.use(cookieParser());
 
 
 import userRouter from './routers/user.router.js'
+import planRouter from './routers/plan.router.js'
+import trainerRouter from './routers/trainer.router.js'
+import exerciseRouter from './routers/exercise.router.js'
+
+
 
 app.use("/api/v1/users",userRouter);
+app.use("/api/v1/plans",planRouter);
+app.use("/api/v1/trainers",trainerRouter);
+app.use("/api/v1/exercises",exerciseRouter);
+
+
 
 
 

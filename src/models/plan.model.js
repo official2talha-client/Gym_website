@@ -2,18 +2,20 @@
 
 const planSchema = new Schema(
   {
-    image: {
-      type: String,
-      required: [true, "Plan image is required"],
-      trim: true,
-    },
-
     name: {
       type: String,
       required: [true, "Plan name is required"],
       trim: true,
       minlength: 3,
       maxlength: 100,
+    },
+
+     description: {
+      type: String,
+      required: [true, "Plan description is required"],
+      trim: true,
+      minlength: 2,
+      maxlength: 300,
     },
 
     duration: {
@@ -24,8 +26,8 @@ const planSchema = new Schema(
 
     type: {
       type: String,
-      enum: ["premium", "normal","exclusive"],
-      default: "normal",
+      enum: ["elegant", "basic","elite"],
+      default: "basic",
     },
 
     subscriptionCharge: {
@@ -77,11 +79,10 @@ const planSchema = new Schema(
 );
 
 // Automatically calculate total charge
-planSchema.pre("save", function (next) {
+planSchema.pre("save", function () {
   this.totalCharge =
     this.subscriptionCharge + this.enrollmentCharge;
 
-  next();
 });
 
 const Plan = mongoose.model("Plan", planSchema);
