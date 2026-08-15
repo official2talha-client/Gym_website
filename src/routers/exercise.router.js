@@ -7,6 +7,7 @@ import {
   getAllExercises,
   getExerciseById,
   filterExercises,
+  getFilterFields
 } from "../controller/exercise.controller.js";
 
 import { verifyJWT } from "../middlwares/auth.middleware.js";
@@ -22,8 +23,11 @@ router.get("/", getAllExercises);
 // Filter exercises
 router.get("/filter", filterExercises);
 
+router.get("/filter-fields", getFilterFields);
+
 // Get exercise by ID
 router.get("/:id", getExerciseById);
+
 
 // Create Exercise
 router.post(

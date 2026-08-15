@@ -270,6 +270,22 @@ export const filterExercises = asyncHandler(async (req, res) => {
   );
 });
 
+export const getFilterFields = asyncHandler(async (req, res) => {
+  const [bodyParts, equipment] = await Promise.all([
+    Exercise.distinct("bodyPart"),
+    Exercise.distinct("equipment"),
+  ]);
+
+  bodyParts.sort();
+  equipment.sort();
+
+  res.status(200).json(
+    new ApiResponse(200,{
+      bodyParts,equipment
+    },"All equipments and body parts fetched successfully")
+  );
+});
+
 
 
 export {createExercise,updateExercise}
