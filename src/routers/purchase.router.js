@@ -6,16 +6,16 @@ import {
   getAllPurchases,
   deletePurchase,
   changePurchaseStatus,
-  getUserPurchases
-,getMyPurchases,
+  getUserPurchases,
+  getMyPurchases,
 } from "../controller/purchase.controller.js";
 
 import { verifyJWT } from "../middlwares/auth.middleware.js";
-import {  validate} from "../middlwares/validate.middleware.js";
-import { acceptPurchaseSchema } from "../validators/purchase.validator.js";
+import { validate } from "../middlwares/validate.middleware.js";
+import { rejectPurchaseSchema } from "../validators/purchase.validator.js";
+import { verifyAdmin } from "../middlwares/admin.middleware.js";
 
 const router = Router();
-
 
 // ======================================================
 // USER
@@ -35,7 +35,6 @@ router.get(
   getMyPurchases
 );
 
-
 // ======================================================
 // ADMIN
 // ======================================================
@@ -44,6 +43,7 @@ router.get(
 router.get(
   "/",
   verifyJWT,
+  verifyAdmin,
   getAllPurchases
 );
 
@@ -51,8 +51,22 @@ router.get(
 router.get(
   "/user/:userId",
   verifyJWT,
+  verifyAdmin,
   getUserPurchases
 );
+
+// Reject purchase
+router.patch(
+  "/:id/status",
+  verifyJWT,
+  verifyAdmin,
+  validate(rejectPurchaseSchema),
+  changePurchaseStatus
+);
+
+// ======================================================
+// USER / GENERAL
+// ======================================================
 
 // Get purchase by ID
 router.get(
@@ -61,20 +75,11 @@ router.get(
   getPurchaseById
 );
 
-// Reject purchase
-router.patch(
-  "/:id/status",
-  verifyJWT,
-  validate(acceptPurchaseSchema),
-  changePurchaseStatus
-);
-
 // Delete purchase
 router.delete(
   "/:id",
   verifyJWT,
   deletePurchase
 );
-
 
 export default router;

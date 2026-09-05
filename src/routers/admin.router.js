@@ -2,37 +2,63 @@ import { Router } from "express";
 
 import {
   getAllUsers,
-  getAllPurchases,
-  updatePurchaseStatus,
+  changeUserStatus,
+  getUserById,
   getPurchaseStatistics,
+  getTotalRevenue,
+  getNewUsers,
+  createBusiness,
+  getMyBusiness,
+  updateBusiness
 } from "../controller/admin.controller.js";
 
 import { verifyJWT } from "../middlwares/auth.middleware.js";
-// import { verifyAdmin } from "../middlewares/admin.middleware.js";
-
-import { validate } from "../middlwares/validate.middleware.js";
-
-import {
-  acceptPurchaseSchema
-} from "../validators/purchase.validator.js";
+import { verifyAdmin } from "../middlwares/admin.middleware.js";
 
 const router = Router();
 
 router.use(verifyJWT);
+router.use(verifyAdmin)
+
+// business router 
+
+router.post("/", createBusiness);
+
+router.get("/my", getMyBusiness);
+
+router.patch("/", updateBusiness);
+
+
+// users router 
 
 router.get("/users", getAllUsers);
 
-router.get("/purchases", getAllPurchases);
+router.get("/usersbyId/:id", getUserById);
 
-router.patch(
-  "/purchases/:id",
-  validate(acceptPurchaseSchema),
-  updatePurchaseStatus
-);
+router.post("/change-userStatus/:id", changeUserStatus);
+
+
+// purchase router 
 
 router.get(
   "/statistics",
   getPurchaseStatistics
 );
+
+
+// dashboard routers 
+
+router.get(
+  "/revenue",
+  getTotalRevenue
+);
+
+router.get(
+  "/newUser",
+  getNewUsers
+);
+
+
+
 
 export default router;

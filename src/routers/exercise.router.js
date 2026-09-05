@@ -11,8 +11,8 @@ import {
 } from "../controller/exercise.controller.js";
 
 import { verifyJWT } from "../middlwares/auth.middleware.js";
-// import   from "../middlwares/admin.middleware.js";
 import {upload} from "../middlwares/multer.middleware.js";
+import { verifyAdmin } from "../middlwares/admin.middleware.js";
 
 const router = express.Router();
 
@@ -33,6 +33,7 @@ router.get("/:id", getExerciseById);
 router.post(
   "/",
   verifyJWT,
+  verifyAdmin,
   upload.fields([
     {
       name: "thumbnail",
@@ -50,6 +51,7 @@ router.post(
 router.patch(
   "/:id",
   verifyJWT,
+  verifyAdmin,
   upload.fields([
     {
       name: "thumbnail",
@@ -63,7 +65,7 @@ router.patch(
 router.delete(
   "/:id",
   verifyJWT,
-//   isAdmin,
+  verifyAdmin,
   deleteExercise
 );
 

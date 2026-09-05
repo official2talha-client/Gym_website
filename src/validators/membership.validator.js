@@ -1,37 +1,53 @@
-import z from "zod";
+import { z } from "zod";
 
-export const createMembershipSchema = z.object({
- 
-     purchaseId: z
-    .string()
-    .regex(
-      /^[0-9a-fA-F]{24}$/,
-      "Invalid purchase ID"
-    ),
+// offline 
+export const offlineMembershipSchema = z
+  .object({
+    user: z
+      .string()
+      .regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID"),
 
-  cardNumber: z
-    .string()
-    .trim()
-    .min(1, "Card number is required"),
+    plan: z
+      .string()
+      .regex(/^[0-9a-fA-F]{24}$/, "Invalid plan ID"),
 
-  startDate: z.coerce.date({
-    error: "Invalid start date",
-  }),
+    cardNumber: z
+      .string()
+      .min(1, "Membership card number is required")
+      .trim(),
 
-  endDate: z.coerce.date({
-    error: "Invalid end date",
-  }),
+    startDate: z.coerce.date({
+      error: "Invalid start date",
+    }),
 
-  status: z
-    .enum(["active", "expired", "suspended"])
-    .default("active"),
-}).refine(
-  (data) => data.endDate > data.startDate,
-  {
+    endDate: z.coerce.date({
+      error: "Invalid end date",
+    }),
+  })
+  .refine((data) => data.endDate > data.startDate, {
     message: "End date must be after start date",
     path: ["endDate"],
-  }
-);
+  });
+
+  // online 
+  export const createMembershipFromPurchaseSchema = z
+  .object({
+    purchaseId: z
+      .string()
+      .regex(/^[0-9a-fA-F]{24}$/, "Invalid purchase ID"),
+
+    startDate: z.coerce.date({
+      error: "Invalid start date",
+    }),
+
+    endDate: z.coerce.date({
+      error: "Invalid end date",
+    }),
+  })
+  .refine((data) => data.endDate > data.startDate, {
+    message: "End date must be after start date",
+    path: ["endDate"],
+  });
 
 export const updateMembershipSchema = z.object({
   startDate: z.coerce.date({

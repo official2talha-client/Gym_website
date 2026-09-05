@@ -27,11 +27,11 @@ user.refreshToken=refreshToken;
 
 const registerUser = asyncHandler(async(req,res)=>{
 
-const {fullName,userName,email,password} = req.body;
+const {fullName,userName,email,password,phone} = req.body;
 
 const existingUser = await User.findOne({
     $or:[
-        {email},
+        {email,phone},
     ],
 })
 
@@ -40,13 +40,18 @@ if (existingUser) {
       throw new ApiError(409, "Email already exists");
     }
 
+    if (existingUser.phone === phone) {
+      throw new ApiError(409, "Phone number already exists");
+    }
+
   }
 
   const user = await User.create({
     fullName,
     userName,
     email,
-    password
+    password,
+    phone
   })
 
 
@@ -67,63 +72,63 @@ if (existingUser) {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
+  const { emailOrPhone, password } = req.body;
 
-    const { email, password } = req.body;
+  if (!emailOrPhone || !password) {
+    throw new ApiError(400, "Email/phone and password are required");
+  }
 
-    // Find User
+  const user = await User.findOne({
+    $or: [
+      { email: emailOrPhone.toLowerCase().trim() },
+      { phone: emailOrPhone.trim() },
+    ],
+  });
 
-    const user = await User.findOne({ email });
-    
+  if (!user) {
+    throw new ApiError(401, "Invalid credentials");
+  }
 
-    if (!user) {
-        throw new ApiError(404, "User does not exist");
-    }
+  const correctPassword = await user.isPasswordCorrect(password);
 
+  if (!correctPassword) {
+    throw new ApiError(401, "Invalid credentials");
+  }
 
-    const correctPassword = await user.isPasswordCorrect(password);
+  // Generate Tokens
+  const { accessToken, refreshToken } =
+    await generateAccessAndRefreshTokens(user._id);
 
-    if (!correctPassword) {
-        throw new ApiError(404, "Invalid password");
-    }
+  // Remove Sensitive Fields
+  const loggedInUser = await User.findById(user._id)
+    .select("-password -refreshToken");
 
-    // Generate Tokens
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
 
-    const { accessToken, refreshToken } =
-        await generateAccessAndRefreshTokens(user._id);
-
-    // Remove Sensitive Fields
-
-    const loggedInUser = await User.findById(user._id)
-        .select("-password -refreshToken");
-
-    const options = {
-        httpOnly: true,
-        secure: true,
-        // sameSite: "none"
-    };
-
-    return res
-        .status(200)
-        .cookie("accessToken", accessToken, {
-            ...options,
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        })
-        .cookie("refreshToken", refreshToken, {
-            ...options,
-            maxAge: 30 * 24 * 60 * 60 * 1000
-        })
-        .json(
-            new ApiResponse(
-                200,
-                {
-                    user: loggedInUser,
-                    accessToken,
-                    refreshToken
-                },
-                "User logged in successfully"
-            )
-        );
-
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, {
+      ...options,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
+    .cookie("refreshToken", refreshToken, {
+      ...options,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    })
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: loggedInUser,
+          accessToken,
+          refreshToken,
+        },
+        "User logged in successfully"
+      )
+    );
 });
 
 const  refreshAccessToken= asyncHandler(async(req,res)=>{

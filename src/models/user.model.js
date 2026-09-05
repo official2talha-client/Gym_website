@@ -11,8 +11,6 @@ const userSchema = new Schema({
         required:true,
         trim:true,
         minlength:3,
-        maxlength:100,
-        match: [/^[a-zA-Z ]+$/, "Full name can contain only letters and spaces"],
 
     },
 
@@ -21,11 +19,7 @@ const userSchema = new Schema({
         required:true,
         trim:true,
         minlength:2,
-        maxlength:50,
-         match: [
-        /^[a-zA-Z0-9_]+$/,
-        "Username can contain only letters, numbers and underscore (_)",
-      ],
+        
     },
 
     email:{
@@ -43,6 +37,12 @@ const userSchema = new Schema({
     },
 
     password:{
+        type:String,
+        required:true,
+        unique:true,
+    },
+
+     phone:{
         type:String,
         required:true,
     },

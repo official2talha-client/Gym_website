@@ -6,7 +6,6 @@ const membershipSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
 
     plan: {
@@ -18,14 +17,19 @@ const membershipSchema = new Schema(
     purchase: {
       type: Schema.Types.ObjectId,
       ref: "Purchase",
-      required: true,
-      unique: true,
+      default:null
     },
 
     cardNumber: {
       type: String,
       required: true,
       trim: true,
+    },
+
+    amount: {
+      type: Number,
+      required: true,
+      min: 0,
     },
 
     startDate: {

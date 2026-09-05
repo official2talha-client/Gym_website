@@ -5,10 +5,7 @@ import { ApiResponse } from "../utils/apiRespose.js";
 import Membership from '../models/membership.model.js'
 import Purchase from "../models/purchase.model.js";
 import {User} from '../models/user.model.js'
-
-// ======================================================
-// CREATE MEMBERSHIP
-// ======================================================
+import Plan from '../models/plan.model.js'
 
 export const createMembership = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -29,7 +26,7 @@ export const createMembership = asyncHandler(async (req, res) => {
 
     const purchase = await Purchase.findById(purchaseId)
       .populate("user", "fullName userName email membershipCard")
-      .populate("plan", "name price duration")
+      .populate("plan", "name totalCharge duration")
       .session(session);
 
     if (!purchase) {
@@ -111,6 +108,7 @@ export const createMembership = asyncHandler(async (req, res) => {
           plan: purchase.plan._id,
           purchase: purchase._id,
           cardNumber: finalCardNumber,
+          amount:purchase.plan.totalCharge,
 
           startDate: start,
           endDate: end,
@@ -153,9 +151,86 @@ export const createMembership = asyncHandler(async (req, res) => {
   }
 });
 
-// ======================================================
+// ofline 
+
+export const createManualMembership = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const {
+      user,
+      plan,
+      cardNumber,
+      startDate,
+      endDate,
+    } = req.body;
+
+    const existingUser = await User.findById(user).session(session);
+
+    if (!existingUser) {
+      throw new ApiError(404, "User not found");
+    }
+
+    const existingPlan = await Plan.findById(plan).session(session);
+
+    if (!existingPlan) {
+      throw new ApiError(404, "Plan not found");
+    }
+
+    let finalCardNumber = existingUser.membershipCard;
+
+    // First membership → admin must provide card
+    if (!finalCardNumber) {
+      if (!cardNumber) {
+        throw new ApiError(
+          400,
+          "Membership card number is required"
+        );
+      }
+
+      finalCardNumber = cardNumber;
+
+      existingUser.membershipCard = cardNumber;
+
+      await existingUser.save({ session });
+    }
+
+    const [membership] = await Membership.create(
+      [
+        {
+          user: existingUser._id,
+          plan: existingPlan._id,
+          purchase: null,
+          cardNumber: finalCardNumber,
+          amount: existingPlan.totalCharge,
+          startDate,
+          endDate,
+          status: "active",
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        membership,
+        "Membership created successfully"
+      )
+    );
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+});
+
 // GET MEMBERSHIP BY ID
-// ======================================================
 
 export const getMembershipById = asyncHandler(async (req, res) => {
 
@@ -193,12 +268,8 @@ export const getMembershipById = asyncHandler(async (req, res) => {
   );
 });
 
-
-// ======================================================
 // GET ALL MEMBERSHIPS
 // Admin
-// ======================================================
-
 export const getAllMemberships = asyncHandler(async (req, res) => {
 
   const memberships = await Membership.find()
@@ -223,10 +294,7 @@ export const getAllMemberships = asyncHandler(async (req, res) => {
   );
 });
 
-
-// ======================================================
 // GET ALL MEMBERSHIPS OF A USER
-// ======================================================
 
 export const getUserMemberships = asyncHandler(async (req, res) => {
 
@@ -259,10 +327,7 @@ export const getUserMemberships = asyncHandler(async (req, res) => {
   );
 });
 
-
-// ======================================================
 // GET CURRENT USER MEMBERSHIP
-// ======================================================
 
 export const getMyMembership = asyncHandler(async (req, res) => {
 
@@ -292,14 +357,10 @@ export const getMyMembership = asyncHandler(async (req, res) => {
   );
 });
 
-
-// ======================================================
-// UPDATE MEMBERSHIP
-// Admin can correct:
+// update 
 // startDate
 // endDate
 // status
-// ======================================================
 
 export const updateMembership = asyncHandler(async (req, res) => {
 
@@ -401,10 +462,7 @@ export const updateMembership = asyncHandler(async (req, res) => {
   );
 });
 
-
-// ======================================================
 // DELETE MEMBERSHIP
-// ======================================================
 
 export const deleteMembership = asyncHandler(async (req, res) => {
 

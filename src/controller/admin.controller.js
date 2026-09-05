@@ -3,9 +3,130 @@ import {ApiError} from '../utils/apiError.js'
 import {ApiResponse} from '../utils/apiRespose.js'
 import {User} from '../models/user.model.js'
 import Purchase from '../models/purchase.model.js'
-import jwt from 'jsonwebtoken'
-import mongoose from 'mongoose'
+import Membership from '../models/membership.model.js'
+import Business from '../models/business.model.js'
 
+// business controllers
+
+const createBusiness = asyncHandler(async (req, res) => {
+  const owner = req.user._id;
+
+  // Check if owner already has a business
+  const existingBusiness = await Business.findOne({ owner });
+
+  if (existingBusiness) {
+    throw new ApiError(
+      409,
+      "You already have a business"
+    );
+  }
+
+  const {
+    name,
+    logo,
+    phone,
+    email,
+    address,
+    weekdays,
+  } = req.body;
+
+  if (!name) {
+    throw new ApiError(400, "Business name is required");
+  }
+  if (!address) {
+    throw new ApiError(400, "Business address is required");
+  }
+
+  const business = await Business.create({
+    owner,
+    name,
+    logo,
+    phone,
+    email,
+    address,
+    weekdays,
+  });
+
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      business,
+      "Business created successfully"
+    )
+  );
+});
+
+
+const getMyBusiness = asyncHandler(async (req, res) => {
+  const business = await Business.findOne({
+    owner: req.user._id,
+  }).populate("owner", "fullName userName email phone");
+
+  if (!business) {
+    throw new ApiError(
+      404,
+      "Business not found"
+    );
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      business,
+      "Business data fetched successfully"
+    )
+  );
+});
+
+const updateBusiness = asyncHandler(async (req, res) => {
+  const {
+    name,
+    logo,
+    phone,
+    email,
+    address,
+    weekdays,
+  } = req.body;
+
+  const business = await Business.findOneAndUpdate(
+    {
+      owner: req.user._id,
+    },
+    {
+      $set: {
+        ...(name !== undefined && { name }),
+        ...(logo !== undefined && { logo }),
+        ...(phone !== undefined && { phone }),
+        ...(email !== undefined && { email }),
+        ...(address !== undefined && { address }),
+        ...(weekdays !== undefined && { weekdays }),
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!business) {
+    throw new ApiError(
+      404,
+      "Business not found"
+    );
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      business,
+      "Business updated successfully"
+    )
+  );
+});
+
+
+
+// users controller 
 
 const getAllUsers = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
@@ -90,121 +211,9 @@ const changeUserStatus = asyncHandler(async (req, res) => {
         )
     );
 
-});
-
-const getAllPurchases = asyncHandler(async (req, res) => {
-  const { status } = req.query;
-
-  const filter = {};
-
-  if (status) {
-    filter.status = status;
-  }
-
-  const purchases = await Purchase.find(filter)
-    .populate("user", "fullName email membershipCardId")
-    .populate("plan")
-    .sort({ createdAt: -1 });
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      purchases,
-      "Purchases fetched successfully"
-    )
-  );
-});
-
-const updatePurchaseStatus = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const { status, membershipCardId } = req.body;
-  console.log(req.body);
-  
-
-  const purchase = await Purchase.findById(id)
-   .populate({
-  path: "user",
-  select:
-    "fullName userName email status membershipCardId",
 })
-.populate({
-  path: "plan",
-  select: "name duration",
-});
 
-  if (!purchase) {
-    throw new ApiError(404, "Purchase not found");
-  }
-
-  if (purchase.status !== "pending") {
-    throw new ApiError(
-      400,
-      "Purchase has already been processed"
-    );
-  }
-
-  if (status === "rejected") {
-    purchase.status = "rejected";
-
-    await purchase.save();
-
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        purchase,
-        "Purchase rejected successfully"
-      )
-    );
-  }
-
-  if (!membershipCardId) {
-    throw new ApiError(
-      400,
-      "Membership card ID is required"
-    );
-  }
-
-  const existingCard = await User.findOne({
-    membershipCardId,
-  });
-
-  if (existingCard) {
-    throw new ApiError(
-      409,
-      "Membership card ID already exists"
-    );
-  }
-
-  const startDate = new Date();
-
-  const endDate = new Date(startDate);
-
-  endDate.setMonth(
-    endDate.getMonth() + purchase.plan.duration
-  );
-
-  purchase.status = "accepted";
-  purchase.startDate = startDate;
-  purchase.endDate = endDate;
-  purchase.approvedAt = new Date();
-
-  await purchase.save();
-
-  purchase.user.membershipCardId = membershipCardId;
-
-  await purchase.user.save({
-    validateBeforeSave: false,
-  });
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      purchase,
-      "Purchase accepted successfully"
-    )
-  );
-});
+// purchase 
 
 const getPurchaseStatistics = asyncHandler(
   async (req, res) => {
@@ -241,4 +250,84 @@ const getPurchaseStatistics = asyncHandler(
   }
 );
 
-export {getAllUsers,getUserById,changeUserStatus,getAllPurchases,getPurchaseStatistics,updatePurchaseStatus}
+// dashboard datas 
+
+const getTotalRevenue = asyncHandler(async (req, res) => {
+  const result = await Membership.aggregate([
+    {
+      $lookup: {
+        from: "plans",
+        localField: "plan",
+        foreignField: "_id",
+        as: "planDetails",
+      },
+    },
+    {
+      $unwind: "$planDetails",
+    },
+    {
+      $group: {
+        _id: null,
+        totalRevenue: {
+          $sum: "$planDetails.totalCharge",
+        },
+        totalMemberships: {
+          $sum: 1,
+        },
+      },
+    },
+  ]);
+
+  const revenue = result[0] || {
+    totalRevenue: 0,
+    totalMemberships: 0,
+  };
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      revenue,
+      "Total revenue calculated successfully"
+    )
+  );
+});
+
+const getNewUsers = asyncHandler(async (req, res) => {
+  const thirtyDaysAgo = new Date();
+
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const [newUsers, totalUsers, activeUsers] = await Promise.all([
+    // New users in last 30 days
+    User.countDocuments({
+      createdAt: {
+        $gte: thirtyDaysAgo,
+      },
+    }),
+
+    // Total users
+    User.countDocuments(),
+
+    // Active users
+    User.countDocuments({
+      status: "active",
+    }),
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        totalUsers,
+        newUsers,
+        activeUsers,
+        period: "last 30 days",
+      },
+      "User statistics fetched successfully"
+    )
+  );
+});
+
+
+
+export {getAllUsers,getUserById,changeUserStatus,getPurchaseStatistics,getTotalRevenue,getNewUsers,createBusiness,getMyBusiness,updateBusiness}

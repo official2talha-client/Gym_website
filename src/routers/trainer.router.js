@@ -10,13 +10,13 @@ import {
 } from "../controller/trainer.controller.js";
 
 import {verifyJWT} from "../middlwares/auth.middleware.js";
-// import verifyAdmin from "../middlewares/admin.middleware.js";
 import {validate} from "../middlwares/validate.middleware.js";
 import {upload} from "../middlwares/multer.middleware.js";
 
 import {
  trainerValidationSchema,updateTrainerSchema
 } from "../validators/trainer.validator.js";
+import { verifyAdmin } from "../middlwares/admin.middleware.js";
 
 const router = Router();
 
@@ -36,7 +36,7 @@ router.get("/get-byId/:id", getTrainerById);
 router.post(
   "/",
   verifyJWT,
-//   verifyAdmin,
+  verifyAdmin,
   upload.single("image"),
   validate(trainerValidationSchema),
   createTrainer
@@ -46,7 +46,7 @@ router.post(
 router.patch(
   "/update/:id",
   verifyJWT,
-//   verifyAdmin,
+  verifyAdmin,
   upload.single("image"),
   validate(updateTrainerSchema),
   updateTrainer
@@ -56,7 +56,7 @@ router.patch(
 router.delete(
   "/delete/:id",
   verifyJWT,
-//   verifyAdmin,
+  verifyAdmin,
   deleteTrainer
 );
 

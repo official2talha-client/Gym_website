@@ -2,9 +2,8 @@ import {asyncHandler} from '../utils/asyncHandler.js'
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiRespose.js";
 import Purchase from '../models/purchase.model.js'
-import mongoose from 'mongoose';
 
-export const createPurchase = asyncHandler(async (req, res) => {
+const createPurchase = asyncHandler(async (req, res) => {
   const { plan } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(plan)) {
@@ -29,7 +28,7 @@ export const createPurchase = asyncHandler(async (req, res) => {
 // GET PURCHASE BY ID
 // ======================================================
 
-export const getPurchaseById = asyncHandler(async (req, res) => {
+const getPurchaseById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -58,7 +57,7 @@ export const getPurchaseById = asyncHandler(async (req, res) => {
 // Admin
 // ======================================================
 
-export const getAllPurchases = asyncHandler(async (req, res) => {
+const getAllPurchases = asyncHandler(async (req, res) => {
   const purchases = await Purchase.find()
     .populate("user", "fullName userName email phone")
     .populate("plan")
@@ -77,7 +76,7 @@ export const getAllPurchases = asyncHandler(async (req, res) => {
 // DELETE PURCHASE
 // ======================================================
 
-export const deletePurchase = asyncHandler(async (req, res) => {
+const deletePurchase = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -113,7 +112,7 @@ export const deletePurchase = asyncHandler(async (req, res) => {
 
 // purchase status change 
 
-export const changePurchaseStatus = asyncHandler(
+const changePurchaseStatus = asyncHandler(
   async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
@@ -158,12 +157,10 @@ export const changePurchaseStatus = asyncHandler(
 );
 
 
-// ======================================================
-// GET PURCHASES OF SPECIFIC USER
-// Admin
-// ======================================================
+//user purchases 
+ 
 
-export const getUserPurchases = asyncHandler(async (req, res) => {
+ const getUserPurchases = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -191,17 +188,18 @@ export const getUserPurchases = asyncHandler(async (req, res) => {
   );
 });
 
+// currentuser purchase 
 
-// ======================================================
-// GET LOGGED-IN USER'S OWN PURCHASES
-// User
-// ======================================================
-
-export const getMyPurchases = asyncHandler(async (req, res) => {
+ const getMyPurchases = asyncHandler(async (req, res) => {
+ 
 
   const purchases = await Purchase.find({
     user: req.user._id,
   })
+    .populate(
+      "user",
+      "fullName userName email phone"
+    )
     .populate(
       "plan"
     )
@@ -218,3 +216,11 @@ export const getMyPurchases = asyncHandler(async (req, res) => {
 
 
 
+
+export {createPurchase,
+  getPurchaseById,
+  getAllPurchases,
+  deletePurchase,
+  changePurchaseStatus,
+  getUserPurchases
+,getMyPurchases,}

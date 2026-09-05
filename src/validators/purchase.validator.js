@@ -1,17 +1,7 @@
-import z from 'zod'
+import z from "zod";
 
-export const acceptPurchaseSchema = z.object({
-  startDate: z.coerce.date({
-    error: "Invalid start date",
+export const rejectPurchaseSchema = z.object({
+  status: z.enum(["rejected"], {
+    error: "Status must be rejected",
   }),
-
-  endDate: z.coerce.date({
-    error: "Invalid end date",
-  }),
-}).refine(
-  (data) => data.endDate > data.startDate,
-  {
-    message: "End date must be after start date",
-    path: ["endDate"],
-  }
-);
+});

@@ -7,31 +7,17 @@ import {
  getMembershipById,
  getMyMembership,
  getUserMemberships,
- updateMembership
+ updateMembership,
+ createManualMembership
 } from "../controller/membership.controller.js";
 
 import { verifyJWT } from "../middlwares/auth.middleware.js";
-// import   from "../middlwares/admin.middleware.js";
-import {createMembershipSchema,updateMembershipSchema} from '../validators/membership.validator.js'
+import {verifyAdmin}  from "../middlwares/admin.middleware.js";
+import {createMembershipFromPurchaseSchema,updateMembershipSchema,offlineMembershipSchema} from '../validators/membership.validator.js'
 import { validate } from "../middlwares/validate.middleware.js";
 
 
 const router = express.Router();
-
-router.post(
-  "/",
-  verifyJWT,
-//   isAdmin,
-  validate(createMembershipSchema),
-  createMembership
-);
-
-router.get(
-  "/",
-  verifyJWT,
-//   isAdmin,
-  getAllMemberships
-);
 
 router.get(
   "/my",
@@ -40,22 +26,49 @@ router.get(
 );
 
 router.get(
-  "/user/:userId",
-  verifyJWT,
-//   isAdmin,
-  getUserMemberships
-);
-
-router.get(
   "/:id",
   verifyJWT,
   getMembershipById
 );
 
+// admin actions 
+
+router.post(
+  "/",
+  verifyJWT,
+  verifyAdmin,
+  validate(createMembershipFromPurchaseSchema),
+  createMembership
+);
+
+// manual 
+
+router.post(
+  "/manual",
+  verifyJWT,
+verifyAdmin,
+  validate(offlineMembershipSchema),
+  createManualMembership
+);
+
+router.get(
+  "/",
+  verifyJWT,
+  verifyAdmin,
+  getAllMemberships
+);
+
+router.get(
+  "/user/:userId",
+  verifyJWT,
+  verifyAdmin,
+  getUserMemberships
+);
+
 router.patch(
   "/:id",
   verifyJWT,
-//   isAdmin,
+  verifyAdmin,
   validate(updateMembershipSchema),
   updateMembership
 );
@@ -63,7 +76,7 @@ router.patch(
 router.delete(
   "/:id",
   verifyJWT,
-//   isAdmin,
+  verifyAdmin,
   deleteMembership
 );
 

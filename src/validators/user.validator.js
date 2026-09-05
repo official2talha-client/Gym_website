@@ -25,6 +25,10 @@ export const registerSchema = z.object({
     .email("Please provide a valid email address")
     .transform((value) => value.toLowerCase().trim()),
 
+     phone: z
+    .string()
+    .regex(/^01[3-9]\d{8}$/, "Invalid Bangladeshi phone number"),
+
   password: z
     .string()
     .min(6, "Password must be at least 6 characters")
@@ -36,7 +40,11 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.email(),
+   emailOrPhone: z
+    .string()
+    .trim()
+    .min(1, "Email or phone is required"),
+
 
   password: z.string().min(1, "Password is required"),
 });

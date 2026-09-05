@@ -2,13 +2,13 @@ import {createPlan,deletePlan,filterPlans,getAllPlans,getPlanById,updatePlan} fr
 import {Router} from 'express'
 
 import { verifyJWT } from "../middlwares/auth.middleware.js";
-// import { verifyAdmin } from "../middlwares/admin.middleware.js";
 
 import {validate} from "../middlwares/validate.middleware.js";
 
 import {
  planValidationSchema,updatePlanSchema
 } from "../validators/plan.validator.js";
+import { verifyAdmin } from '../middlwares/admin.middleware.js';
 
 const router = Router();
 
@@ -21,7 +21,7 @@ router.get("/get-byId/:id", getPlanById);
 router.post(
   "/",
   verifyJWT,
-//   verifyAdmin,
+  verifyAdmin,
   validate(planValidationSchema),
   createPlan
 );
@@ -29,7 +29,7 @@ router.post(
 router.patch(
   "/update/:id",
   verifyJWT,
-//   verifyAdmin,
+  verifyAdmin,
   validate(updatePlanSchema),
   updatePlan
 );
@@ -37,7 +37,7 @@ router.patch(
 router.delete(
   "/delete/:id",
   verifyJWT,
-//   verifyAdmin,
+  verifyAdmin,
   deletePlan
 );
 

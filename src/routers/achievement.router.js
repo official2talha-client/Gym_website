@@ -6,7 +6,6 @@ import { validate } from "../middlwares/validate.middleware.js";
 
 import {
   createAchievementSchema,
-  updateAchievementSchema,
 } from "../validators/achivement.validator.js";
 
 import {
