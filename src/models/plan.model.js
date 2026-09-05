@@ -19,9 +19,8 @@ const planSchema = new Schema(
     },
 
     duration: {
-      type: String,
-      required: [true, "Duration is required"],
-      trim: true,
+      type: Number,
+      required:true
     },
 
     type: {

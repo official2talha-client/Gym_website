@@ -15,10 +15,9 @@ export const planValidationSchema = z.object({
     .max(300),
 
   duration: z
-    .string()
-    .trim()
-    .min(1, "Duration is required."),
-
+  .coerce
+    .number()
+,
   type: z.enum(["elegant", "basic","elite"]),
 
   subscriptionCharge: z.coerce

@@ -21,6 +21,12 @@ import userRouter from './routers/user.router.js'
 import planRouter from './routers/plan.router.js'
 import trainerRouter from './routers/trainer.router.js'
 import exerciseRouter from './routers/exercise.router.js'
+import adminRouter from './routers/admin.router.js'
+import personalInfoRouter from './routers/personalInfo.router.js'
+import achievementRouter from './routers/achievement.router.js'
+import purchaseRouter from './routers/purchase.router.js'
+import membershipRouter from './routers/membership.route.js'
+
 
 
 
@@ -28,6 +34,13 @@ app.use("/api/v1/users",userRouter);
 app.use("/api/v1/plans",planRouter);
 app.use("/api/v1/trainers",trainerRouter);
 app.use("/api/v1/exercises",exerciseRouter);
+app.use("/api/v1/userInfo",personalInfoRouter);
+app.use("/api/v1/achievements",achievementRouter);
+app.use("/api/v1/purchases",purchaseRouter);
+app.use("/api/v1/memberships",membershipRouter);
+
+app.use("/api/v1/admin",adminRouter);
+
 
 
 

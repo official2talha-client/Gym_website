@@ -1,71 +1,42 @@
 import { z } from "zod";
 
-export const userValidationSchema = z.object({
+export const registerSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(3, "Full name must be at least 3 characters")
+    .max(100, "Full name cannot exceed 100 characters")
+    .regex(
+      /^[a-zA-Z ]+$/,
+      "Full name can contain only letters and spaces"
+    ),
 
-    fullName: z
-        .string()
-        .trim()
-        .min(3, "Full name must be at least 3 characters.")
-        .max(100)
-        .regex(
-            /^[a-zA-Z ]+$/,
-            "Full name can contain only letters and spaces."
-        ),
+  userName: z
+    .string()
+    .trim()
+    .min(2, "Username must be at least 2 characters")
+    .max(50, "Username cannot exceed 50 characters")
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Username can contain only letters, numbers, and underscores"
+    ),
 
-    userName: z
-        .string()
-        .trim()
-        .min(2)
-        .max(50)
-        .regex(
-            /^[a-zA-Z0-9_]+$/,
-            "Username can contain only letters, numbers and underscore (_)."
-        ),
+  email: z
+    .email("Please provide a valid email address")
+    .transform((value) => value.toLowerCase().trim()),
 
-    email: z
-        .string()
-        .trim()
-        .toLowerCase()
-        .email("Please provide a valid email."),
-        
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .max(32, "Password cannot exceed 32 characters")
+    .regex(
+      /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@#_!]{6,32}$/,
+      "Password must contain at least one letter and one number"
+    ),
+});
 
-    password: z
-        .string()
-        .min(6)
-        .max(32)
-        .regex(
-            /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@#_!]+$/,
-            "Password must contain at least one letter and one number."
-        ),
+export const loginSchema = z.object({
+  email: z.email(),
 
-    age: z
-    .coerce
-        .number()
-        .min(0, "Age cannot be negative")
-        .optional(),
-
-    weight: z
-    .coerce
-        .number()
-        .min(0, "Weight cannot be negative")
-        .optional(),
-
-    height: z
-    .coerce
-        .number()
-        .min(0, "Height cannot be negative")
-        .optional(),
-
-    role: z
-        .enum(["admin", "user"])
-        .optional(),
-
-    status: z
-        .enum(["active", "blocked"])
-        .optional(),
-
-    refreshToken: z
-        .string()
-        .optional(),
-
+  password: z.string().min(1, "Password is required"),
 });

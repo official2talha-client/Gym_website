@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 
+
 const userSchema = new Schema({
 
       fullName:{
@@ -44,38 +45,15 @@ const userSchema = new Schema({
     password:{
         type:String,
         required:true,
-        minlength:6,
-       match: [
-  /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@#_!]{6,32}$/,
-  "Password must contain at least one letter and one number."
-]
     },
 
-    age:{
-        type:Number,
-        min:[0, "age cannot be negative"]
-    },
-
-    weight:{
-        type:Number,
-        min:[0, "age cannot be negative"]
-    },
-
-    height:{
-        type:Number,
-        min:[0, "age cannot be negative"]
-    },
-
-    goal:{
+    membershipCard:{
         type:String,
+        required:true,
 
     },
 
-     refreshToken: {
-        type:String
-    },
-
-    role:{
+      role:{
         type:String,
         enum:["admin","user"],
         default:"user"
@@ -83,20 +61,26 @@ const userSchema = new Schema({
 
     status:{
         type:String,
-        enum:["active","blocked"],
+        enum:["active","freeze"],
         default:"active"
     },
 
 
+
+     refreshToken: {
+        type:String
+    },
+
+  
 },
 {timestamps:true}
 );
 
-userSchema.pre("save",async function (){
-    if(!this.isModified("password")) return;
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
 
-    this.password = await bcrypt.hash(this.password,10);
-})
+  this.password = await bcrypt.hash(this.password, 10);
+});
 
 userSchema.methods.isPasswordCorrect = async function (password) {
 

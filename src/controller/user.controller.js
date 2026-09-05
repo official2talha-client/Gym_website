@@ -240,47 +240,6 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 });
 
-const getAllUsers = asyncHandler(async (req, res) => {
-
-    const users = await User.find()
-        .select("-password -refreshToken")
-        
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            users,
-            "Users fetched successfully"
-        )
-    );
-
-});
-
-const getUserById = asyncHandler(async (req, res) => {
-
-    const { id } = req.params;
-
-    const user = await User.findById(id)
-        .select("-password -refreshToken")
-       
-
-    if (!user) {
-        throw new ApiError(
-            404,
-            "User not found"
-        );
-    }
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            user,
-            "User fetched successfully"
-        )
-    );
-
-});
-
 const changePassword = asyncHandler(async (req, res) => {
 
     const {
@@ -323,34 +282,5 @@ const changePassword = asyncHandler(async (req, res) => {
 
 });
 
-const changeUserStatus = asyncHandler(async (req, res) => {
 
-    const { id } = req.params;
-    const { status } = req.body;
-
-    const user = await User.findByIdAndUpdate(
-        id,
-        {
-            status
-        },
-        {
-            new: true,
-            runValidators: true
-        }
-    ).select("-password -refreshToken");
-
-    if (!user) {
-        throw new ApiError(404, "User not found");
-    }
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            user,
-            "User status updated successfully"
-        )
-    );
-
-});
-
-export {registerUser,loginUser,getCurrentUser,getAllUsers,getUserById,refreshAccessToken,changePassword,changeUserStatus,logoutUser}
+export {registerUser,loginUser,getCurrentUser,refreshAccessToken,changePassword,logoutUser}
