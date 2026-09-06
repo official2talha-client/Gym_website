@@ -78,6 +78,7 @@ export const createMembership = asyncHandler(async (req, res) => {
     // =========================
 
     let finalCardNumber = user.membershipCard;
+    
 
     // First membership → admin provides card
     if (!finalCardNumber) {

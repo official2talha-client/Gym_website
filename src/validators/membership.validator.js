@@ -36,6 +36,10 @@ export const offlineMembershipSchema = z
       .string()
       .regex(/^[0-9a-fA-F]{24}$/, "Invalid purchase ID"),
 
+       cardNumber: z
+      .string()
+      .optional(),
+
     startDate: z.coerce.date({
       error: "Invalid start date",
     }),

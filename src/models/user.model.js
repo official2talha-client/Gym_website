@@ -49,8 +49,7 @@ const userSchema = new Schema({
 
     membershipCard:{
         type:String,
-        required:true,
-
+        default:null
     },
 
       role:{

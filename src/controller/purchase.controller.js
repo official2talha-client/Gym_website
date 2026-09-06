@@ -2,6 +2,7 @@ import {asyncHandler} from '../utils/asyncHandler.js'
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiRespose.js";
 import Purchase from '../models/purchase.model.js'
+import mongoose from 'mongoose';
 
 const createPurchase = asyncHandler(async (req, res) => {
   const { plan } = req.body;
@@ -24,9 +25,7 @@ const createPurchase = asyncHandler(async (req, res) => {
   );
 });
 
-// ======================================================
 // GET PURCHASE BY ID
-// ======================================================
 
 const getPurchaseById = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -52,10 +51,8 @@ const getPurchaseById = asyncHandler(async (req, res) => {
   );
 });
 
-// ======================================================
 // GET ALL PURCHASES
 // Admin
-// ======================================================
 
 const getAllPurchases = asyncHandler(async (req, res) => {
   const purchases = await Purchase.find()
@@ -72,9 +69,7 @@ const getAllPurchases = asyncHandler(async (req, res) => {
   );
 });
 
-// ======================================================
 // DELETE PURCHASE
-// ======================================================
 
 const deletePurchase = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -156,9 +151,7 @@ const changePurchaseStatus = asyncHandler(
   }
 );
 
-
 //user purchases 
- 
 
  const getUserPurchases = asyncHandler(async (req, res) => {
   const { userId } = req.params;
