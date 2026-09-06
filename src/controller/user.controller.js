@@ -25,50 +25,53 @@ user.refreshToken=refreshToken;
 }
 
 
-const registerUser = asyncHandler(async(req,res)=>{
+const registerUser = asyncHandler(async (req, res) => {
+  const { fullName, userName, email, password, phone } = req.body;
 
-const {fullName,userName,email,password,phone} = req.body;
+  const normalizedEmail = email.toLowerCase().trim();
+  const normalizedPhone = phone.trim();
 
-const existingUser = await User.findOne({
-    $or:[
-        {email,phone},
+  // Check duplicate email OR phone
+  const existingUser = await User.findOne({
+    $or: [
+      { email: normalizedEmail },
+      { phone: normalizedPhone },
     ],
-})
+  });
 
-if (existingUser) {
-    if (existingUser.email === email) {
+  if (existingUser) {
+    if (existingUser.email === normalizedEmail) {
       throw new ApiError(409, "Email already exists");
     }
 
-    if (existingUser.phone === phone) {
+    if (existingUser.phone === normalizedPhone) {
       throw new ApiError(409, "Phone number already exists");
     }
-
   }
 
   const user = await User.create({
     fullName,
     userName,
-    email,
+    email: normalizedEmail,
     password,
-    phone
-  })
-
+    phone: normalizedPhone,
+  });
 
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
-  )
+  );
 
-  
-  if(!createdUser){
-    throw new ApiError (500,"user registration failed")
+  if (!createdUser) {
+    throw new ApiError(500, "User registration failed");
   }
 
-  return res.status(201)
-  .json(
-    new ApiResponse(200,createdUser,"user created successfully")
-  )
-
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      createdUser,
+      "User created successfully"
+    )
+  );
 });
 
 const loginUser = asyncHandler(async (req, res) => {

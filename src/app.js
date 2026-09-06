@@ -26,6 +26,7 @@ import personalInfoRouter from './routers/personalInfo.router.js'
 import achievementRouter from './routers/achievement.router.js'
 import purchaseRouter from './routers/purchase.router.js'
 import membershipRouter from './routers/membership.route.js'
+import errorHandler from "./utils/errorHandler.js";
 
 
 
@@ -41,7 +42,7 @@ app.use("/api/v1/memberships",membershipRouter);
 
 app.use("/api/v1/admin",adminRouter);
 
-
+app.use(errorHandler)
 
 
 
