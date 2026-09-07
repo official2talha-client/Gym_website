@@ -89,13 +89,13 @@ const loginUser = asyncHandler(async (req, res) => {
   });
 
   if (!user) {
-    throw new ApiError(401, "Invalid credentials");
+    throw new ApiError(404, "Invalid credentials");
   }
 
   const correctPassword = await user.isPasswordCorrect(password);
 
   if (!correctPassword) {
-    throw new ApiError(401, "Invalid credentials");
+    throw new ApiError(404, "Invalid credentials");
   }
 
   // Generate Tokens
