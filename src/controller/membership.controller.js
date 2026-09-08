@@ -332,9 +332,10 @@ export const getUserMemberships = asyncHandler(async (req, res) => {
 
 export const getMyMembership = asyncHandler(async (req, res) => {
 
-  const membership = await Membership.findOne({
+  const membership = await Membership.find({
     user: req.user._id,
-  })
+  }).populate("user", "fullName userName email phone")
+
     .populate(
       "plan"
     )
