@@ -9,7 +9,8 @@ import {
   getNewUsers,
   createBusiness,
   getMyBusiness,
-  updateBusiness
+  updateBusiness,
+  getAdminActionRecords
 } from "../controller/admin.controller.js";
 
 import { verifyJWT } from "../middlwares/auth.middleware.js";
@@ -58,6 +59,10 @@ router.get(
   getNewUsers
 );
 
+router.get(
+  "/action-records",
+  getAdminActionRecords
+);
 
 
 

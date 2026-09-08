@@ -272,18 +272,18 @@ export const getMembershipById = asyncHandler(async (req, res) => {
 // GET ALL MEMBERSHIPS
 // Admin
 export const getAllMemberships = asyncHandler(async (req, res) => {
+  const { status } = req.query;
 
-  const memberships = await Membership.find()
-    .populate(
-      "user",
-      "fullName userName email phone"
-    )
-    .populate(
-      "plan"
-    )
-    .populate(
-      "purchase"
-    )
+  const filter = {};
+
+  if (status) {
+    filter.status = status;
+  }
+
+  const memberships = await Membership.find(filter)
+    .populate("user", "fullName userName email phone")
+    .populate("plan")
+    .populate("purchase")
     .sort({ createdAt: -1 });
 
   return res.status(200).json(

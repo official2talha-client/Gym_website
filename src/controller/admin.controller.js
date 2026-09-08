@@ -329,5 +329,75 @@ const getNewUsers = asyncHandler(async (req, res) => {
 });
 
 
+const getAdminActionRecords = asyncHandler(async (req, res) => {
+  const today = new Date();
 
-export {getAllUsers,getUserById,changeUserStatus,getPurchaseStatistics,getTotalRevenue,getNewUsers,createBusiness,getMyBusiness,updateBusiness}
+  // Start of today
+  const startOfToday = new Date(today);
+  startOfToday.setHours(0, 0, 0, 0);
+
+  // 10 days from today
+  const tenDaysFromNow = new Date(startOfToday);
+  tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
+  tenDaysFromNow.setHours(23, 59, 59, 999);
+
+  const [pendingPurchases, expiringMemberships] = await Promise.all([
+    // Pending purchase requests
+    Purchase.find({ status: "pending" })
+      .populate("user", "fullName userName phone email")
+      .populate("plan", "name totalCharge duration")
+      .sort({ requestedAt: -1 })
+      .lean(),
+
+    // Memberships expiring within next 10 days
+    Membership.find({
+      status: "active",
+      endDate: {
+        $gte: startOfToday,
+        $lte: tenDaysFromNow,
+      },
+    })
+      .populate("user", "fullName userName phone email")
+      .populate("plan", "name totalCharge duration")
+      .sort({ endDate: 1 })
+      .lean(),
+  ]);
+
+  // Add daysLeft to each membership
+  const membershipsWithDaysLeft = expiringMemberships.map((membership) => {
+    const endDate = new Date(membership.endDate);
+
+    const differenceInMs =
+      endDate.getTime() - startOfToday.getTime();
+
+    const daysLeft = Math.ceil(
+      differenceInMs / (1000 * 60 * 60 * 24)
+    );
+
+    return {
+      ...membership,
+      daysLeft,
+    };
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        pendingPurchases: {
+          count: pendingPurchases.length,
+          records: pendingPurchases,
+        },
+
+        expiringMemberships: {
+          count: membershipsWithDaysLeft.length,
+          records: membershipsWithDaysLeft,
+        },
+      },
+      "Admin action records fetched successfully"
+    )
+  );
+});
+
+
+export {getAllUsers,getUserById,changeUserStatus,getPurchaseStatistics,getTotalRevenue,getNewUsers,createBusiness,getMyBusiness,updateBusiness,getAdminActionRecords}

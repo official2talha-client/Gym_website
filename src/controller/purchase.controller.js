@@ -55,8 +55,36 @@ const getPurchaseById = asyncHandler(async (req, res) => {
 // Admin
 
 const getAllPurchases = asyncHandler(async (req, res) => {
-  const purchases = await Purchase.find()
-    .populate("user", "fullName userName email phone")
+  const { status, startDate, endDate } = req.query;
+
+  const filter = {};
+
+  // Status filter
+  if (status) {
+    filter.status = status;
+  }
+
+  // Date range filter
+  if (startDate || endDate) {
+    filter.createdAt = {};
+
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
+      filter.createdAt.$gte = start;
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      filter.createdAt.$lte = end;
+    }
+  }
+
+  const purchases = await Purchase.find(filter)
+    .populate("user", "fullName userName email phone membershipCard")
     .populate("plan")
     .sort({ createdAt: -1 });
 
@@ -111,6 +139,9 @@ const changePurchaseStatus = asyncHandler(
   async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
+    
+    
+    
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ApiError(400, "Invalid purchase ID");
