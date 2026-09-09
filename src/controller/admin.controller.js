@@ -56,7 +56,6 @@ const createBusiness = asyncHandler(async (req, res) => {
   );
 });
 
-
 const getMyBusiness = asyncHandler(async (req, res) => {
   const business = await Business.findOne({
     owner: req.user._id,
@@ -67,6 +66,23 @@ const getMyBusiness = asyncHandler(async (req, res) => {
       404,
       "Business not found"
     );
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      business,
+      "Business data fetched successfully"
+    )
+  );
+});
+
+export const getBusinessForUser = asyncHandler(async (req, res) => {
+  const business = await Business.findOne()
+    .select("name address email logo phone weekdays");
+
+  if (!business) {
+    throw new ApiError(404, "Business not found");
   }
 
   return res.status(200).json(
@@ -131,15 +147,46 @@ const updateBusiness = asyncHandler(async (req, res) => {
 const getAllUsers = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
-
   const skip = (page - 1) * limit;
 
-  const users = await User.find()
-    .select("-password -refreshToken")
-    .skip(skip)
-    .limit(limit);
+  const { status, search, phone } = req.query;
 
-  const totalUsers = await User.countDocuments();
+  // Base filter: never return admins
+  const filter = {
+    role: { $ne: "admin" },
+  };
+
+  // Status filter
+  if (status) {
+    filter.status = status;
+  }
+
+  // Search by fullName, userName or email
+  if (search) {
+    filter.$or = [
+      { fullName: { $regex: search, $options: "i" } },
+      { userName: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  // Phone filter
+  if (phone) {
+    filter.phone = {
+      $regex: phone,
+      $options: "i",
+    };
+  }
+
+  const [users, totalUsers] = await Promise.all([
+    User.find(filter)
+      .select("-password -refreshToken")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }),
+
+    User.countDocuments(filter),
+  ]);
 
   return res.status(200).json(
     new ApiResponse(

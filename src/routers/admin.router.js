@@ -10,13 +10,16 @@ import {
   createBusiness,
   getMyBusiness,
   updateBusiness,
-  getAdminActionRecords
+  getAdminActionRecords,
+  getBusinessForUser
 } from "../controller/admin.controller.js";
 
 import { verifyJWT } from "../middlwares/auth.middleware.js";
 import { verifyAdmin } from "../middlwares/admin.middleware.js";
 
 const router = Router();
+
+router.get("/businessfor-user", getBusinessForUser);
 
 router.use(verifyJWT);
 router.use(verifyAdmin)
