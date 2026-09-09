@@ -8,12 +8,13 @@ import {
  getMyMembership,
  getUserMemberships,
  updateMembership,
- createManualMembership
+ createManualMembership,
+ getMyExpiringMemberships
 } from "../controller/membership.controller.js";
 
 import { verifyJWT } from "../middlwares/auth.middleware.js";
 import {verifyAdmin}  from "../middlwares/admin.middleware.js";
-import {createMembershipFromPurchaseSchema,updateMembershipSchema,offlineMembershipSchema} from '../validators/membership.validator.js'
+import {createMembershipFromPurchaseSchema,updateMembershipSchema,offlineMembershipSchema,} from '../validators/membership.validator.js'
 import { validate } from "../middlwares/validate.middleware.js";
 
 
@@ -23,6 +24,12 @@ router.get(
   "/my",
   verifyJWT,
   getMyMembership
+);
+
+router.get(
+  "/my/expiring",
+  verifyJWT,
+  getMyExpiringMemberships
 );
 
 router.get(

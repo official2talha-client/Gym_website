@@ -496,3 +496,66 @@ export const deleteMembership = asyncHandler(async (req, res) => {
     )
   );
 });
+
+// expiring 
+
+export const getMyExpiringMemberships = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const today = new Date();
+
+  const startOfToday = new Date(today);
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const tenDaysFromToday = new Date(startOfToday);
+  tenDaysFromToday.setDate(tenDaysFromToday.getDate() + 10);
+  tenDaysFromToday.setHours(23, 59, 59, 999);
+
+  const memberships = await Membership.find({
+    user: req.user._id,
+    status: "active",
+    endDate: {
+      $gte: startOfToday,
+      $lte: tenDaysFromToday,
+    },
+  })
+    .populate("plan")
+    .sort({ endDate: 1 })
+    .lean();
+
+  const membershipsWithDetails = memberships.map((membership) => {
+    const endDate = new Date(membership.endDate);
+
+    const differenceInMs =
+      endDate.getTime() - startOfToday.getTime();
+
+    const daysLeft = Math.ceil(
+      differenceInMs / (1000 * 60 * 60 * 24)
+    );
+
+    return {
+      membershipId: membership._id,
+      plan: membership.plan,
+      amount: membership.amount,
+      cardNumber: membership.cardNumber,
+
+      createdAt: membership.createdAt,
+      startDate: membership.startDate,
+      endDate: membership.endDate,
+
+      daysLeft,
+      status: membership.status,
+    };
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        count: membershipsWithDetails.length,
+        memberships: membershipsWithDetails,
+      },
+      "Expiring memberships fetched successfully"
+    )
+  );
+});
