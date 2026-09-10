@@ -98,6 +98,12 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Invalid credentials");
   }
 
+  if(user.status != "active" ){
+
+    throw new ApiError(403, "User is not active");
+
+    }
+
   // Generate Tokens
   const { accessToken, refreshToken } =
     await generateAccessAndRefreshTokens(user._id);

@@ -272,27 +272,40 @@ export const getMembershipById = asyncHandler(async (req, res) => {
 // GET ALL MEMBERSHIPS
 // Admin
 export const getAllMemberships = asyncHandler(async (req, res) => {
-  const { status } = req.query;
+    const { status, membershipCard } = req.query;
 
-  const filter = {};
+    const filter = {};
 
-  if (status) {
-    filter.status = status;
-  }
+    if (status) {
+        filter.status = status;
+    }
 
-  const memberships = await Membership.find(filter)
-    .populate("user", "fullName userName email phone")
-    .populate("plan")
-    .populate("purchase")
-    .sort({ createdAt: -1 });
+    if (membershipCard) {
+        const users = await User.find({
+            membershipCard: {
+                $regex: membershipCard,
+                $options: "i",
+            },
+        }).select("_id");
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      memberships,
-      "Memberships fetched successfully"
-    )
-  );
+        const userIds = users.map((user) => user._id);
+
+        filter.user = { $in: userIds };
+    }
+
+    const memberships = await Membership.find(filter)
+        .populate("user", "fullName userName email phone membershipCard")
+        .populate("plan")
+        .populate("purchase")
+        .sort({ createdAt: -1 });
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            memberships,
+            "Memberships fetched successfully"
+        )
+    );
 });
 
 // GET ALL MEMBERSHIPS OF A USER

@@ -141,7 +141,6 @@ const updateBusiness = asyncHandler(async (req, res) => {
 });
 
 
-
 // users controller 
 
 const getAllUsers = asyncHandler(async (req, res) => {
@@ -167,16 +166,11 @@ const getAllUsers = asyncHandler(async (req, res) => {
       { fullName: { $regex: search, $options: "i" } },
       { userName: { $regex: search, $options: "i" } },
       { email: { $regex: search, $options: "i" } },
+      { phone: { $regex: search, $options: "i" } },
+
     ];
   }
 
-  // Phone filter
-  if (phone) {
-    filter.phone = {
-      $regex: phone,
-      $options: "i",
-    };
-  }
 
   const [users, totalUsers] = await Promise.all([
     User.find(filter)
@@ -231,34 +225,51 @@ const getUserById = asyncHandler(async (req, res) => {
 });
 
 const changeUserStatus = asyncHandler(async (req, res) => {
-
     const { id } = req.params;
-    const { status } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-        id,
-        {
-            status
-        },
-        {
-            new: true,
-            runValidators: true
-        }
-    ).select("-password -refreshToken");
+    const user = await User.findById(id);
 
     if (!user) {
         throw new ApiError(404, "User not found");
     }
 
+    const newStatus =
+        user.status === "active"
+            ? "freeze"
+            : "active";
+
+   const updatedUser = await User.findOneAndUpdate(
+    {
+        _id: id,
+        status: { $in: ["active", "freeze"] }
+    },
+    [
+        {
+            $set: {
+                status: {
+                    $cond: [
+                        { $eq: ["$status", "active"] },
+                        "freeze",
+                        "active"
+                    ]
+                }
+            }
+        }
+    ],
+    {
+        returnDocument: "after",
+        updatePipeline: true
+    }
+).select("-password -refreshToken");
+
     return res.status(200).json(
         new ApiResponse(
             200,
-            user,
-            "User status updated successfully"
+            updatedUser,
+            `User ${newStatus === "active" ? "activated" : "frozen"} successfully`
         )
     );
-
-})
+});
 
 // purchase 
 
