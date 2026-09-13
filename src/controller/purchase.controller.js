@@ -2,6 +2,7 @@ import {asyncHandler} from '../utils/asyncHandler.js'
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiRespose.js";
 import Purchase from '../models/purchase.model.js'
+import {User} from '../models/user.model.js'
 import mongoose from 'mongoose';
 
 const createPurchase = asyncHandler(async (req, res) => {
@@ -55,13 +56,34 @@ const getPurchaseById = asyncHandler(async (req, res) => {
 // Admin
 
 const getAllPurchases = asyncHandler(async (req, res) => {
-  const { status, startDate, endDate } = req.query;
+  const {
+    status,
+    startDate,
+    endDate,
+    phone,
+  } = req.query;
 
   const filter = {};
 
   // Status filter
   if (status) {
     filter.status = status;
+  }
+
+  // Phone filter
+  if (phone) {
+    const users = await User.find({
+      phone: {
+        $regex: phone,
+        $options: "i",
+      },
+    }).select("_id");
+
+    const userIds = users.map((user) => user._id);
+
+    filter.user = {
+      $in: userIds,
+    };
   }
 
   // Date range filter
@@ -82,9 +104,14 @@ const getAllPurchases = asyncHandler(async (req, res) => {
       filter.createdAt.$lte = end;
     }
   }
+  console.log(filter);
+  
 
   const purchases = await Purchase.find(filter)
-    .populate("user", "fullName userName email phone membershipCard")
+    .populate(
+      "user",
+      "fullName userName email phone membershipCard"
+    )
     .populate("plan")
     .sort({ createdAt: -1 });
 
