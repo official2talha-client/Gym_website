@@ -16,6 +16,7 @@ import {
 
 import { verifyJWT } from "../middlwares/auth.middleware.js";
 import { verifyAdmin } from "../middlwares/admin.middleware.js";
+import {upload} from '../middlwares/multer.middleware.js'
 
 const router = Router();
 
@@ -26,12 +27,14 @@ router.use(verifyAdmin)
 
 // business router 
 
-router.post("/", createBusiness);
-
+router.post(
+  "/",
+  upload.single("logo"),
+  createBusiness
+);
 router.get("/my", getMyBusiness);
 
-router.patch("/", updateBusiness);
-
+router.patch("/", upload.single("logo"), updateBusiness);
 
 // users router 
 

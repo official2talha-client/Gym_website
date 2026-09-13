@@ -5,6 +5,7 @@ import {User} from '../models/user.model.js'
 import Purchase from '../models/purchase.model.js'
 import Membership from '../models/membership.model.js'
 import Business from '../models/business.model.js'
+import {uploadCloudinary} from '../utils/cloudinary.js'
 
 // business controllers
 
@@ -23,7 +24,6 @@ const createBusiness = asyncHandler(async (req, res) => {
 
   const {
     name,
-    logo,
     phone,
     email,
     address,
@@ -31,10 +31,28 @@ const createBusiness = asyncHandler(async (req, res) => {
   } = req.body;
 
   if (!name) {
-    throw new ApiError(400, "Business name is required");
+    throw new ApiError(
+      400,
+      "Business name is required"
+    );
   }
+
   if (!address) {
-    throw new ApiError(400, "Business address is required");
+    throw new ApiError(
+      400,
+      "Business address is required"
+    );
+  }
+
+  let logo;
+
+  // Upload logo to Cloudinary
+  if (req.file) {
+    const uploadedLogo = await uploadCloudinary(
+      req.file.path
+    );
+
+    logo = uploadedLogo?.secure_url;
   }
 
   const business = await Business.create({
@@ -97,12 +115,20 @@ export const getBusinessForUser = asyncHandler(async (req, res) => {
 const updateBusiness = asyncHandler(async (req, res) => {
   const {
     name,
-    logo,
     phone,
     email,
     address,
     weekdays,
   } = req.body;
+
+  let logo;
+
+  // Upload new logo if provided
+  if (req.file) {
+    const uploadedLogo = await uploadCloudinary(req.file.path);
+
+    logo = uploadedLogo?.secure_url;
+  }
 
   const business = await Business.findOneAndUpdate(
     {

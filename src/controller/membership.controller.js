@@ -293,8 +293,26 @@ export const getAllMemberships = asyncHandler(async (req, res) => {
         filter.user = { $in: userIds };
     }
 
+    // Check memberships whose end date has passed
+    const today = new Date();
+
+    await Membership.updateMany(
+        {
+            endDate: { $lt: today },
+            status: { $ne: "expired" },
+        },
+        {
+            $set: {
+                status: "expired",
+            },
+        }
+    );
+
     const memberships = await Membership.find(filter)
-        .populate("user", "fullName userName email phone membershipCard")
+        .populate(
+            "user",
+            "fullName userName email phone membershipCard"
+        )
         .populate("plan")
         .populate("purchase")
         .sort({ createdAt: -1 });
@@ -311,7 +329,6 @@ export const getAllMemberships = asyncHandler(async (req, res) => {
 // GET ALL MEMBERSHIPS OF A USER
 
 export const getUserMemberships = asyncHandler(async (req, res) => {
-
   const { userId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -321,15 +338,29 @@ export const getUserMemberships = asyncHandler(async (req, res) => {
     );
   }
 
+  // Consider the membership active for the entire end date
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+
+  // Mark expired memberships
+  await Membership.updateMany(
+    {
+      user: userId,
+      endDate: { $lt: today },
+      status: { $ne: "expired" },
+    },
+    {
+      $set: {
+        status: "expired",
+      },
+    }
+  );
+
   const memberships = await Membership.find({
     user: userId,
   })
-    .populate(
-      "plan"
-    )
-    .populate(
-      "purchase"
-    )
+    .populate("plan")
+    .populate("purchase")
     .sort({ createdAt: -1 });
 
   return res.status(200).json(
@@ -344,19 +375,35 @@ export const getUserMemberships = asyncHandler(async (req, res) => {
 // GET CURRENT USER MEMBERSHIP
 
 export const getMyMembership = asyncHandler(async (req, res) => {
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+
+  // Mark expired memberships
+  await Membership.updateMany(
+    {
+      user: req.user._id,
+      endDate: { $lt: today },
+      status: { $ne: "expired" },
+    },
+    {
+      $set: {
+        status: "expired",
+      },
+    }
+  );
 
   const membership = await Membership.find({
     user: req.user._id,
-  }).populate("user", "fullName userName email phone")
-
+  })
     .populate(
-      "plan"
+      "user",
+      "fullName userName email phone"
     )
-    .populate(
-      "purchase"
-    );
+    .populate("plan")
+    .populate("purchase")
+    .sort({ createdAt: -1 });
 
-  if (!membership) {
+  if (!membership.length) {
     throw new ApiError(
       404,
       "Membership not found"
