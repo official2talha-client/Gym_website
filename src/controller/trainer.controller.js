@@ -20,6 +20,17 @@ const createTrainer = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Trainer image is required");
   }
 
+  // Convert achievements from FormData string to actual array
+  let parsedAchievements = [];
+
+  if (achievements) {
+    try {
+      parsedAchievements = JSON.parse(achievements);
+    } catch (error) {
+      throw new ApiError(400, "Invalid achievements format");
+    }
+  }
+
   const existingTrainer = await Trainer.findOne({
     name: {
       $regex: new RegExp(`^${name}$`, "i"),
@@ -41,7 +52,7 @@ const createTrainer = asyncHandler(async (req, res) => {
     name,
     shift,
     timeRange,
-    achievements,
+    achievements: parsedAchievements, // ✅ actual array
     age,
     experience,
     gender,
