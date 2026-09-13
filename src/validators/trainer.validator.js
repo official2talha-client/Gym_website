@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 export const trainerValidationSchema = z.object({
-
-
   name: z
     .string()
     .trim()
@@ -17,8 +15,11 @@ export const trainerValidationSchema = z.object({
     .min(3, "Time range is required."),
 
   achievements: z
-    .array(z.string().trim())
-    .default([]),
+  .union([
+    z.array(z.string().trim()),
+    z.string().trim(),
+  ])
+  .optional(),
 
   age: z.coerce
     .number()
