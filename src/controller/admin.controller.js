@@ -311,40 +311,125 @@ const getPurchaseStatistics = asyncHandler(
 // dashboard datas 
 
 const getTotalRevenue = asyncHandler(async (req, res) => {
-  const result = await Membership.aggregate([
-    {
-      $lookup: {
-        from: "plans",
-        localField: "plan",
-        foreignField: "_id",
-        as: "planDetails",
-      },
-    },
-    {
-      $unwind: "$planDetails",
-    },
+  const now = new Date();
+
+  // Current month
+  const startOfThisMonth = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    1
+  );
+
+  const startOfNextMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    1
+  );
+
+  // Previous month
+  const startOfPreviousMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() - 1,
+    1
+  );
+
+  const [result] = await Membership.aggregate([
     {
       $group: {
         _id: null,
+
+        // All-time revenue
         totalRevenue: {
-          $sum: "$planDetails.totalCharge",
+          $sum: "$amount",
         },
+
+        // Total memberships
         totalMemberships: {
           $sum: 1,
+        },
+
+        // This month's revenue
+        thisMonthRevenue: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ["$createdAt", startOfThisMonth] },
+                  { $lt: ["$createdAt", startOfNextMonth] },
+                ],
+              },
+              "$amount",
+              0,
+            ],
+          },
+        },
+
+        // Previous month's revenue
+        previousMonthRevenue: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ["$createdAt", startOfPreviousMonth] },
+                  { $lt: ["$createdAt", startOfThisMonth] },
+                ],
+              },
+              "$amount",
+              0,
+            ],
+          },
         },
       },
     },
   ]);
 
-  const revenue = result[0] || {
+  const revenue = result || {
     totalRevenue: 0,
     totalMemberships: 0,
+    thisMonthRevenue: 0,
+    previousMonthRevenue: 0,
   };
+
+  const {
+    totalRevenue,
+    totalMemberships,
+    thisMonthRevenue,
+    previousMonthRevenue,
+  } = revenue;
+
+  // Calculate percentage change
+  let revenueChange = 0;
+  let revenueChangeType = "no-change";
+
+  if (previousMonthRevenue === 0) {
+    if (thisMonthRevenue > 0) {
+      revenueChange = 100;
+      revenueChangeType = "profit";
+    }
+  } else {
+    revenueChange =
+      ((thisMonthRevenue - previousMonthRevenue) /
+        previousMonthRevenue) *
+      100;
+
+    if (revenueChange > 0) {
+      revenueChangeType = "profit";
+    } else if (revenueChange < 0) {
+      revenueChangeType = "loss";
+    }
+  }
 
   return res.status(200).json(
     new ApiResponse(
       200,
-      revenue,
+      {
+        totalRevenue,
+        totalMemberships,
+        thisMonthRevenue,
+        previousMonthRevenue,
+        revenueChange: Number(revenueChange.toFixed(2)),
+        revenueChangeType,
+      },
       "Total revenue calculated successfully"
     )
   );
