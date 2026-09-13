@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 const app = express();
 
 app.use(cors({
-    origin:["http://localhost:5174","https://gym-client-bay.vercel.app/"],
+    origin:["https://gym-client-bay.vercel.app/"],
     credentials: true,
 }));
 app.use(express.json({limit: "16kb"}));
