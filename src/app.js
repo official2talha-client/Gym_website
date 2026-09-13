@@ -7,7 +7,7 @@ const app = express();
 app.use(cors({
      origin: [
       "http://localhost:5174",
-      "https://gym-client-bay.vercel.app",
+      "https://fit-gym-client.vercel.app",
     ],
     credentials: true,
 }));
