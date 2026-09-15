@@ -47,6 +47,12 @@ app.use("/api/v1/admin",adminRouter);
 
 app.use(errorHandler)
 
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Gym server is healthy",
+  });
+});
 
 
 
