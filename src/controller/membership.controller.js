@@ -403,13 +403,6 @@ export const getMyMembership = asyncHandler(async (req, res) => {
     .populate("purchase")
     .sort({ createdAt: -1 });
 
-  if (!membership.length) {
-    throw new ApiError(
-      404,
-      "Membership not found"
-    );
-  }
-
   return res.status(200).json(
     new ApiResponse(
       200,
